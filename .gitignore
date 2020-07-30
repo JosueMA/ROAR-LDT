@@ -1,0 +1,8 @@
+*.m~
+*.png
+*.pdf
+*.Rhistory
+wordlists
+RDRPRepository*.csv
+.DS_Store
+
