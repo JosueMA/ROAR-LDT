@@ -15,7 +15,6 @@ This analysis code agregates data from three versions of the online experiment (
   - **LDT_alldata_wide_sorted.csv** Same data as above but the rows are order based on each subject's percent correct and the columns are ordered based on each columns percent correct. See figs/WordMatrix.eps
   - **metadata_all.csv** Subject metadata including ages and reading scores. This needs to be filtered based on subject ID to match rows to the LDT data.
   - **wordStatistics.csv** Statistics on each stimulus such as word frequency, bigram and trigram statistics, etc. For definitions of word stats see: https://www.neuro.mcw.edu/mcword/definitions.html#UN1
-* **figs** Directory to save figures
 * **analysis** Directory of analysis code 
   - **LDT_Run_All.sh** This shell script runs the whole analysis pipeline. In a shell type "source LDT_Run_All.sh" and it will run each step of the analysis pipeline and make figures.
   - **LDT_AnalyzeData.m** This MATLAB script concatenates all of the raw data files into a table and performs some initial analyses. Must run this first to add new data to the tables that every other function uses
