@@ -1,6 +1,7 @@
 # Rapid Online Assessment of Reading ability (ROAR)
 #
-# Measuring reading ability in the web-browser with a lexical decision task
+## Measuring reading ability in the web-browser with a lexical decision task
+Jason D. Yeatman, Kenny An Tang, Patrick M. Donnelly, Maya Yablonski, Maha Ramamurthy, Iliana I. Karipidis, Sendy Caffarra,  Megumi E. Takada, Michal Ben-Shachar, Benjamin W. Domingue
 
 ## Summary 
 This analysis code agregates data from three versions of the online experiment (Stanford Child, UW Child, Stanford Adults) and generates figures and analyses for the manuscript.
