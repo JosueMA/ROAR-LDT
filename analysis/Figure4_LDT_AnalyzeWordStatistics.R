@@ -193,8 +193,8 @@ p1 = ggplot(ti.long,aes(x=thetavals,y=TestInfo,group=List)) +
   theme(legend.direction = "horizontal", legend.position = c(0.55, 0.1),
         legend.background = element_rect(fill='white', size=.5, linetype="solid", colour="gray30"))+
   scale_x_continuous(breaks=c(-4, -2, 0,2,4),sec.axis = sec_axis(~ .*coef(lm.T.WJ)[2] + coef(lm.T.WJ)[1], 
-                                         name= 'WJ Word ID (raw)',breaks=c(30,40,50,60,70))) +
-  
+                                         name= 'Woodcock Johnson Word ID (raw)',breaks=c(30,40,50,60,70))) +
+  theme(axis.title = element_text(size = 10.5))+
   # Add grade level scale
   geom_vline(xintercept = (29-coef(lm.T.WJ)[1])/coef(lm.T.WJ)[2],linetype='dashed',alpha=.3,color='indianred') +
   geom_vline(xintercept = (43-coef(lm.T.WJ)[1])/coef(lm.T.WJ)[2],alpha=.3,color='indianred') +
