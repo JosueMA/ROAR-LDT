@@ -1,3 +1,5 @@
+# Rapid Online Assessment of Reading ability (ROAR)
+#
 # Measuring reading ability in the web-browser with a lexical decision task
 
 ## Summary 
