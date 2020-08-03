@@ -170,7 +170,7 @@ if (generate.lists){
 }
 
 ## Load up the prefered list and use it for figures
-word.list.file = 'wordlists/WordLists144.csv' # 
+word.list.file = 'wordlists/WordLists144_finalized.csv' # swapped sain for med
 print(sprintf('LOADING WORD LIST FILE: %s',word.list.file))
 word.lists <- read.csv(word.list.file)
 
