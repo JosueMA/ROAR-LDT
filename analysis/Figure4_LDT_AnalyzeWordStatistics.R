@@ -6,6 +6,7 @@ library(cowplot)
 library(mirt)
 library(psych)
 library(viridis)
+library(stringr)
 
 # Whether or not to generate new lists
 generate.lists=FALSE
@@ -20,6 +21,7 @@ print(sprintf('Correlation between difficulty estimates based on 1PL vs 2PL: r=%
               cor(words.irt2$b,words.irt3$b)))
 word.stats = read.csv('wordStatistics.csv')
 word.stats$words <- word.stats$STRING # if and in get changed in R so we change them here
+word.exclude <- read.csv('WordsToExclude.csv')
 
 sub.data <- read.csv('~/git/ROAR-LDT/data_allsubs/SubjectThetaEstimates.csv')
 # Load and join metadata
@@ -53,10 +55,17 @@ sprintf('%d Pseudowords and %d Realswords',sum(is.na(words.irt.stats2$FREQ)),
         sum(!is.na(words.irt.stats2$FREQ)))
 sprintf('%d Pseudowords and %d Realswords',sum(is.na(words.irt.stats3$FREQ)),
         sum(!is.na(words.irt.stats3$FREQ)))
-hist(words.irt.stats3$b)
+
+# Remove pseudowords that might confuse English Language Learners
+words.irt.stats3 <- filter(words.irt.stats3,!is.element(words,word.exclude$WordsToExclude))
+words.irt.stats3$realpseudo = factor(is.na(words.irt.stats3$FREQ),levels=c(FALSE,TRUE),labels = c('real','pseudo'))
+sprintf('%d Pseudowords and %d Realswords left after final cleaning',sum(is.na(words.irt.stats3$FREQ)),
+        sum(!is.na(words.irt.stats3$FREQ)))
+g1 = ggplot(words.irt.stats3,aes(x=LEN,color=realpseudo,fill=realpseudo))+
+  geom_histogram(binwidth = 1,position="dodge",alpha=0.5)
 
 n.rw = 38 # 38 real words 
-n.pw = 40 # 40 pseudoworsd
+n.pw = 38 # 40 pseudoworsd
 nl = 3 # 3 lists
 thetavals = seq(min(theta.range),max(theta.range),.01)
 # divide into real and pseudo word lists
@@ -79,6 +88,7 @@ if (generate.lists){
   mi <- matrix(nrow=nlists,ncol=3)
   sdi <- matrix(nrow=nlists,ncol=3)
   rwj <- matrix(nrow=nlists,ncol=3)
+  d.LH <- matrix(nrow=nlists,ncol=3)
   
   for (ii in 1:nlists){
     # Shuffle columns
@@ -91,18 +101,24 @@ if (generate.lists){
     
     # Shuffle rows and extract desired number of words
     # First generate a random sample but leaving the first n and last n rows in plkace
-    pwsample <- sample((bottomkeep+1):(nrow(row2list.pw)-topkeep), size=(n.pw-bottomkeep-topkeep), replace = FALSE)
-    rwsample <- sample((bottomkeep+1):(nrow(row2list.rw)-topkeep), size=(n.rw-bottomkeep-topkeep), replace = FALSE)
+    pwsample <- sample((bottomkeep+1):(nrow(row2list.pw.ii)-topkeep), size=(n.pw-bottomkeep-topkeep), replace = FALSE)
+    rwsample <- sample((bottomkeep+1):(nrow(row2list.rw.ii)-topkeep), size=(n.rw-bottomkeep-topkeep), replace = FALSE)
     
     # Take the sample but keeping the desired number at the top and bottom
-    row2list.pw.ii <- row2list.pw[c(1:bottomkeep,pwsample,(nrow(row2list.pw)-topkeep+1):nrow(row2list.pw)),]
-    row2list.rw.ii <- row2list.rw[c(1:bottomkeep,rwsample,(nrow(row2list.rw)-topkeep+1):nrow(row2list.rw)),]
+    row2list.pw.ii <- row2list.pw.ii[c(1:bottomkeep,pwsample,(nrow(row2list.pw.ii)-topkeep+1):nrow(row2list.pw.ii)),]
+    row2list.rw.ii <- row2list.rw.ii[c(1:bottomkeep,rwsample,(nrow(row2list.rw.ii)-topkeep+1):nrow(row2list.rw.ii)),]
     
     # Make datafram with n lists
     word.lists = data.frame(listA = c(rw$words[row2list.rw.ii[,1]],pw$words[row2list.pw.ii[,1]]),
                             listB = c(rw$words[row2list.rw.ii[,2]],pw$words[row2list.pw.ii[,2]]),   
                             listC = c(rw$words[row2list.rw.ii[,3]],pw$words[row2list.pw.ii[,3]]))
-    
+    # Match word length histograms between rw and pw
+    d.LH[ii,1] <- sum((hist(str_length(word.lists$listA[1:n.rw]), breaks=c(2: 16))$counts -
+                hist(str_length(word.lists$listA[(n.rw+1):dim(word.lists)[2]]), breaks=c(2: 16))$counts)^2)
+    d.LH[ii,2] <- sum((hist(str_length(word.lists$listB[1:n.rw]), breaks=c(2: 16))$counts -
+                          hist(str_length(word.lists$listB[(n.rw+1):dim(word.lists)[2]]), breaks=c(2: 16))$counts)^2)
+    d.LH[ii,3] <- sum((hist(str_length(word.lists$listC[1:n.rw]), breaks=c(2: 16))$counts -
+                          hist(str_length(word.lists$listC[(n.rw+1):dim(word.lists)[2]]), breaks=c(2: 16))$counts)^2)
     m1 <- mirt(select(df,all_of(word.lists$listA)), model = 1, itemtype = 'Rasch', guess=0.5) # 2AFC. Guess Rate = 0.5
     m2 <- mirt(select(df,all_of(word.lists$listB)), model = 1, itemtype = 'Rasch', guess=0.5) # 2AFC. Guess Rate = 0.5
     m3 <- mirt(select(df,all_of(word.lists$listC)), model = 1, itemtype = 'Rasch', guess=0.5) # 2AFC. Guess Rate = 0.5
@@ -132,7 +148,9 @@ if (generate.lists){
     lines(thetavals,ti3,col='blue',lwd=4)
     dev.off()
   } 
-  list.stats <- data.frame(mse=rowSums(mse),info=rowSums(mi), sd=rowSums(sdi),r.wj=rwj,min.wj=apply(rwj,1,FUN=min),max.wj=apply(rwj,1,FUN=max),mean.wj=rowMeans(rwj))
+  list.stats <- data.frame(mse=rowSums(mse),info=rowSums(mi), sd=rowSums(sdi),
+                           r.wj=rwj,min.wj=apply(rwj,1,FUN=min),max.wj=apply(rwj,1,FUN=max),
+                           mean.wj=rowMeans(rwj),length.diff=rowSums(d.LH))
   list.stats$listnum <-rownames(list.stats)
   list.stats <- arrange(list.stats,mse)
   
@@ -140,9 +158,10 @@ if (generate.lists){
   p2 <- ggplot(list.stats, aes(sd, info, label = listnum,color=mean.wj)) + geom_text(alpha=.8)+theme(legend.position = 'none')+scale_color_viridis(option='plasma',direction=1)
   p3 <- ggplot(list.stats, aes(sd, mse, label = listnum,color=mean.wj)) + geom_text(alpha=.8)+theme(legend.position = 'none')+scale_color_viridis(option='plasma',direction=1)
   p4 <- ggplot(list.stats, aes(min.wj, max.wj, label = listnum, color=info)) + geom_text(alpha=.8)+theme(legend.position = 'none')+scale_color_viridis(option='plasma',direction=1)
+  p5 <- ggplot(list.stats, aes(length.diff, mean.wj, label = listnum,color=info)) + geom_text(alpha=.8)+theme(legend.position = 'none')+scale_color_viridis(option='plasma',direction=1)
   
-  grid.arrange(p1,p2,p3, p4, nrow =1)
-  g <- arrangeGrob(p1,p2,p3,p4, nrow=1) 
+  grid.arrange(p1,p2,p3, p4,p5, nrow =1)
+  g <- arrangeGrob(p1,p2,p3,p4,p5, nrow=1) 
   ggsave('wordlists/ListStatsPlots.pdf',g,height = 3,width=10)
   g
   write.csv(list.stats,'wordlists/liststats.csv')
@@ -151,7 +170,7 @@ if (generate.lists){
 }
 
 ## Load up the prefered list and use it for figures
-word.list.file = 'wordlists/WordLists190.csv' # 'wordlists/WordLists80.csv' 'wordlists/WordLists218.csv'
+word.list.file = 'wordlists/WordLists144.csv' # 
 print(sprintf('LOADING WORD LIST FILE: %s',word.list.file))
 word.lists <- read.csv(word.list.file)
 
