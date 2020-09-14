@@ -38,10 +38,13 @@ irt.estimates <- filter(irt.estimates,version=='v2')
 
 # Join metadata and irt estiates
 sub.data <- left_join(irt.estimates, metadata)
+print(sprintf('%d Subjects with ROAR-LDT V2 data',dim(sub.data)[1]))
 # Get data without nan
 sub.data <- filter(sub.data,!is.na(wj_lwid_raw))
+print(sprintf('%d Subjects with wj_lwid_raw scores that are not NaN',dim(sub.data)[1]))
 # Remove subjects with very old scores
-sub.data <- filter(sub.data,MonthsSinceTesting<11)
+sub.data <- filter(sub.data,MonthsSinceTesting<12)
+print(sprintf('%d Subjects with wj_lwid_raw scores in the last 12 months',dim(sub.data)[1]))
 
 
 ## Figure
@@ -60,8 +63,8 @@ p1
 p2 <- ggplot(sub.data, aes(x=theta1pl, y=wj_lwid_raw)) +
   geom_point(aes(colour=agenow/12),size=3,alpha=1) + stat_smooth(method="lm", se=TRUE, color='gray30') + xlab('Ability estimate (1PL model)') +
   # scale_color_viridis(option='viridis',direction=-1)+
-  scale_color_gradientn(colours = wes_palette(n=5, name="Zissou1"),limits = agerange) + 
-  #scale_color_gradientn(colours = c( 'dodgerblue1','firebrick1','goldenrod1')) + 
+  # scale_color_gradientn(colours = wes_palette(n=5, name="Zissou1"),limits = agerange) + 
+  scale_color_gradientn(colours = c( 'dodgerblue1','firebrick1','goldenrod1')) + 
   labs(colour = "Age") + theme(legend.position = "right")+
   geom_label(x=min(sub.data$theta1pl),y=max(sub.data$wj_lwid_raw)-1, label=sprintf('r = %.2f',cor(select(sub.data, theta1pl,wj_lwid_raw))[1,2]),hjust=0, vjust=0,size=3)
 p2
@@ -79,8 +82,8 @@ p3 <- ggplot(sub.data, aes(x=ncor, y=wj_lwid_raw)) +
 p3
 p4 <- ggplot(sub.data, aes(x=theta1pl, y=wj_lwid_raw)) +
   geom_point(aes(colour=agenow/12),size=3,alpha=1) + stat_smooth(method="lm", se=TRUE, color='gray30') + xlab('Ability estimate (1PL model)') +
-  #scale_color_gradientn(colours = c( 'dodgerblue1','firebrick1','goldenrod1'),limits = agerange) + 
-  scale_color_gradientn(colours = wes_palette(n=5, name="Zissou1"),limits = agerange) + 
+  scale_color_gradientn(colours = c( 'dodgerblue1','firebrick1','goldenrod1'),limits = agerange) + 
+  #scale_color_gradientn(colours = wes_palette(n=5, name="Zissou1"),limits = agerange) + 
   labs(colour = "Age") + theme(legend.position = "right")+
   geom_label(x=min(sub.data$theta1pl),y=max(sub.data$wj_lwid_raw)-1, label=sprintf('r = %.2f',cor(select(sub.data, theta1pl,wj_lwid_raw))[1,2]),hjust=0, vjust=0,size=3)
 p4
